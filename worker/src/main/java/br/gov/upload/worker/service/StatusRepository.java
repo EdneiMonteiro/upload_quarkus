@@ -1,0 +1,84 @@
+/*
+ * Disclaimer
+ * Notice: Any sample scripts, code, or commands comes with the following notification.
+ *
+ * This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production
+ * environment. THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+ * EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute
+ * the object code form of the Sample Code, provided that You agree: (i) to not use Our name, logo, or trademarks to
+ * market Your software product in which the Sample Code is embedded; (ii) to include a valid copyright notice on Your
+ * software product in which the Sample Code is embedded; and (iii) to indemnify, hold harmless, and defend Us and Our
+ * suppliers from and against any claims or lawsuits, including attorneys' fees, that arise or result from the use or
+ * distribution of the Sample Code.
+ *
+ * Please note: None of the conditions outlined in the disclaimer above will supersede the terms and conditions
+ * contained within the Customers Support Services Description.
+ */
+package br.gov.upload.worker.service;
+
+import br.gov.upload.shared.model.ProcessingState;
+import br.gov.upload.shared.model.ProcessingStatus;
+import com.azure.data.tables.TableClient;
+import com.azure.data.tables.TableClientBuilder;
+import com.azure.data.tables.models.TableEntity;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+@ApplicationScoped
+public class StatusRepository {
+
+    private static final Logger LOG = Logger.getLogger(StatusRepository.class);
+    private static final String PARTITION_KEY = "upload";
+    private final TableClient tableClient;
+
+    public StatusRepository(
+            @ConfigProperty(name = "upload.storage.table-service-url") String tableServiceUrl,
+            @ConfigProperty(name = "upload.storage.status-table-name") String tableName) {
+        this.tableClient = new TableClientBuilder()
+                .endpoint(tableServiceUrl)
+                .tableName(tableName)
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .buildClient();
+    }
+
+    public void upsert(ProcessingStatus status) {
+        var entity = new TableEntity(PARTITION_KEY, status.getUploadId());
+        entity.addProperty("upload_id", status.getUploadId());
+        entity.addProperty("correlation_id", status.getCorrelationId());
+        entity.addProperty("state", status.getState());
+        entity.addProperty("submitted_at", status.getSubmittedAt());
+        entity.addProperty("updated_at", status.getUpdatedAt());
+        entity.addProperty("submitted_by", status.getSubmittedBy());
+        if (status.getRecordsProcessed() != null) {
+            entity.addProperty("records_processed", status.getRecordsProcessed());
+        }
+        if (status.getErrorMessage() != null) {
+            entity.addProperty("error_message", status.getErrorMessage());
+        }
+        tableClient.upsertEntity(entity);
+        LOG.debugf("status atualizado: uploadId=%s state=%s", status.getUploadId(), status.getState());
+    }
+
+    public ProcessingStatus markProcessing(ProcessingStatus status) {
+        var updated = status.withState(ProcessingState.PROCESSING);
+        upsert(updated);
+        return updated;
+    }
+
+    public ProcessingStatus markCompleted(ProcessingStatus status, int recordsProcessed) {
+        var updated = status.withCompleted(recordsProcessed);
+        upsert(updated);
+        return updated;
+    }
+
+    public ProcessingStatus markFailed(ProcessingStatus status, String errorMessage) {
+        var updated = status.withFailed(errorMessage);
+        upsert(updated);
+        return updated;
+    }
+}

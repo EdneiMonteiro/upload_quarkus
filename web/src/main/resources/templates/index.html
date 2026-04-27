@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Quarkus Demo (Quarkus)</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; padding: 2rem; background: #f5f7fa; color: #14213d; }
+      main { max-width: 40rem; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 12px 30px rgba(20,33,61,.08); }
+      .error { margin-bottom: 1rem; padding: 0.75rem 1rem; background: #fdecea; color: #8a1c1c; border-radius: 0.5rem; }
+      form { display: grid; gap: 1rem; }
+      button { width: fit-content; background: #0057b8; color: #fff; border: 0; border-radius: 0.5rem; padding: 0.75rem 1.25rem; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Upload de CSV</h1>
+      <p>Envie um arquivo CSV para demonstrar o fluxo assincrono com Blob Storage e Storage Queue.</p>
+      <p><small>Powered by <strong>Quarkus + AKS</strong></small></p>
+      {#if error}
+      <div class="error">{error}</div>
+      {/if}
+      <form action="/uploads" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv,text/csv" required>
+        <button type="submit">Enviar arquivo</button>
+      </form>
+    </main>
+  </body>
+</html>

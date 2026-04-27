@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Disclaimer
+  Notice: Any sample scripts, code, or commands comes with the following notification.
+
+  This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production
+  environment. THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+  EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+  PARTICULAR PURPOSE.
+
+  We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute
+  the object code form of the Sample Code, provided that You agree: (i) to not use Our name, logo, or trademarks to
+  market Your software product in which the Sample Code is embedded; (ii) to include a valid copyright notice on Your
+  software product in which the Sample Code is embedded; and (iii) to indemnify, hold harmless, and defend Us and Our
+  suppliers from and against any claims or lawsuits, including attorneys' fees, that arise or result from the use or
+  distribution of the Sample Code.
+
+  Please note: None of the conditions outlined in the disclaimer above will supersede the terms and conditions
+  contained within the Customers Support Services Description.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>br.gov.upload</groupId>
+    <artifactId>upload-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Upload Quarkus PoC</name>
+
+    <modules>
+        <module>shared</module>
+        <module>backend</module>
+        <module>web</module>
+        <module>worker</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <quarkus.platform.version>3.17.7</quarkus.platform.version>
+        <azure-sdk.version>1.2.29</azure-sdk.version>
+        <azure-identity.version>1.14.2</azure-identity.version>
+        <azure-storage-blob.version>12.29.0</azure-storage-blob.version>
+        <azure-storage-queue.version>12.23.0</azure-storage-queue.version>
+        <azure-data-tables.version>12.5.0</azure-data-tables.version>
+        <surefire-plugin.version>3.5.2</surefire-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>br.gov.upload</groupId>
+                <artifactId>upload-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-maven-plugin</artifactId>
+                    <version>${quarkus.platform.version}</version>
+                    <extensions>true</extensions>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>build</goal>
+                                <goal>generate-code</goal>
+                                <goal>generate-code-tests</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire-plugin.version}</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

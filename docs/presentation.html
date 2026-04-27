@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<!--
+  Disclaimer
+  Notice: Any sample scripts, code, or commands comes with the following notification.
+
+  This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production
+  environment. THIS SAMPLE CODE AND ANY RELATED INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+  EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+  PARTICULAR PURPOSE.
+
+  We grant You a nonexclusive, royalty-free right to use and modify the Sample Code and to reproduce and distribute
+  the object code form of the Sample Code, provided that You agree: (i) to not use Our name, logo, or trademarks to
+  market Your software product in which the Sample Code is embedded; (ii) to include a valid copyright notice on Your
+  software product in which the Sample Code is embedded; and (iii) to indemnify, hold harmless, and defend Us and Our
+  suppliers from and against any claims or lawsuits, including attorneys' fees, that arise or result from the use or
+  distribution of the Sample Code.
+
+  Please note: None of the conditions outlined in the disclaimer above will supersede the terms and conditions
+  contained within the Customers Support Services Description.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Quarkus PoC — Apresentação</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+    --green: #4ade80; --orange: #fb923c; --pink: #f472b6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 18px; scroll-behavior: smooth; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* Slide container */
+  .slide { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 3rem 6rem; position: relative; }
+  .slide::after { content: attr(data-num); position: absolute; bottom: 1.5rem; right: 2rem; font-size: .8rem; color: var(--muted); }
+  .slide-title { display: flex; align-items: center; justify-content: center; text-align: center; }
+  .slide h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 1rem; }
+  .slide h2 { font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: .5rem; }
+  .slide h3 { font-size: 1.3rem; font-weight: 600; color: var(--orange); margin: 1.2rem 0 .5rem; }
+  .slide p, .slide li { line-height: 1.7; color: var(--text); }
+  .slide ul { padding-left: 1.5rem; }
+  .slide li { margin-bottom: .4rem; }
+  .slide li::marker { color: var(--accent); }
+
+  /* Hero */
+  .hero h1 { font-size: 3.5rem; background: linear-gradient(135deg, var(--accent), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .subtitle { font-size: 1.4rem; color: var(--muted); margin-top: .5rem; }
+  .badge { display: inline-block; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: .25rem .8rem; font-size: .85rem; color: var(--accent); margin: .3rem .15rem; }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; margin-top: 1rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: transform .2s; }
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .card h3 { margin-top: 0; }
+  .card p { font-size: .95rem; color: var(--muted); }
+  .card .icon { font-size: 2rem; margin-bottom: .5rem; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }
+  th { background: var(--surface); color: var(--accent); text-align: left; padding: .6rem .8rem; border-bottom: 2px solid var(--accent); }
+  td { padding: .5rem .8rem; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: rgba(56,189,248,.05); }
+
+  /* Code */
+  pre { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; margin: .8rem 0; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+  .kw { color: #ff7b72; } .str { color: #a5d6ff; } .cmt { color: #8b949e; font-style: italic; }
+  .typ { color: #79c0ff; } .fn { color: #d2a8ff; } .ann { color: #ffa657; }
+  .highlight-line { background: rgba(56,189,248,.12); display: block; margin: 0 -1.2rem; padding: 0 1.2rem; border-left: 3px solid var(--accent); }
+
+  /* Mermaid */
+  pre.mermaid {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 1rem;
+    line-height: 1.2;
+    overflow: visible;
+  }
+  .mermaid-wrap {
+    background: #0f172a;
+    border: 2px solid #334155;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    margin: 1rem 0;
+    overflow: visible;
+  }
+  .mermaid-wrap .mermaid {
+    display: block;
+    width: 100%;
+  }
+  .mermaid-wrap .mermaid svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 58vh;
+    width: auto;
+    height: auto;
+  }
+
+  /* Separator */
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* Columns */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; }
+  @media (max-width: 900px) {
+    .cols { grid-template-columns: 1fr; }
+    .slide { padding: 2rem 1.5rem; }
+  }
+
+  /* Nav */
+  nav { position: fixed; top: 0; right: 0; z-index: 99; display: flex; gap: .5rem; padding: .8rem; }
+  nav button { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; width: 36px; height: 36px; cursor: pointer; font-size: 1rem; }
+  nav button:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Progress */
+  #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 100; transition: width .3s; }
+
+  /* Step list */
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { counter-increment: step; padding: .6rem 0 .6rem 3rem; position: relative; border-left: 2px solid var(--border); margin-left: 1rem; }
+  .steps li::before { content: counter(step); position: absolute; left: -14px; top: .5rem; width: 26px; height: 26px; background: var(--accent); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<nav>
+  <button onclick="prev()" title="Anterior">&#9650;</button>
+  <button onclick="next()" title="Próximo">&#9660;</button>
+</nav>
+
+<!-- ============ SLIDE 1 — CAPA ============ -->
+<section class="slide slide-title hero" data-num="1 / 12">
+  <div>
+    <h1>Upload Quarkus PoC</h1>
+    <p class="subtitle">Processamento Assíncrono de Uploads CSV no Azure</p>
+    <div style="margin-top:1.5rem">
+      <span class="badge">Java 21</span>
+      <span class="badge">Quarkus 3.17</span>
+      <span class="badge">Azure AKS</span>
+      <span class="badge">Workload Identity</span>
+      <span class="badge">KEDA</span>
+      <span class="badge">Terraform</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2 — PROBLEMA ============ -->
+<section class="slide" data-num="2 / 12">
+  <h2>O Problema</h2>
+  <div class="cols">
+    <div>
+      <h3>Cenário</h3>
+      <ul>
+        <li>Upload de <strong>arquivos CSV</strong> com uploads CSV (5.000–10.000 linhas)</li>
+        <li>Processamento <strong>demorado</strong> (validação, enriquecimento, persistência)</li>
+        <li>Múltiplos arquivos enviados <strong>simultaneamente</strong></li>
+        <li>Necessidade de <strong>consultar status</strong> em tempo real</li>
+      </ul>
+      <h3>Requisitos</h3>
+      <ul>
+        <li>Processamento <strong>assíncrono</strong> e desacoplado</li>
+        <li>Escalabilidade <strong>automática</strong> baseada na demanda</li>
+        <li>Autenticação <strong>sem secrets</strong> (Managed Identity)</li>
+        <li>Infraestrutura como código (Terraform)</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>Números do Teste</h3>
+        <table>
+          <tr><td>Arquivos</td><td><strong>10</strong></td></tr>
+          <tr><td>Registros</td><td><strong>69.449</strong></td></tr>
+          <tr><td>Workers paralelos</td><td><strong>10</strong></td></tr>
+          <tr><td>Tempo total</td><td><strong>~15 min</strong></td></tr>
+          <tr><td>Falhas</td><td><strong>0</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3 — ARQUITETURA ============ -->
+<section class="slide" data-num="3 / 12">
+  <h2>Arquitetura Geral</h2>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+    U["👤 Usuário"]
+
+    subgraph AKS["☸ AKS Cluster"]
+        direction TB
+        WEB["🌐 Web\n(Quarkus + Qute)"]
+        API["⚙️ Backend\n(REST API)"]
+        W["🔧 Workers\n(0–10 pods)"]
+    end
+
+    subgraph Storage["☁️ Azure Storage"]
+        BLOB["📦 Blob\nuploads/"]
+        QUEUE["📬 Queue\nwork-items"]
+        TABLE["📋 Table\nuploadstatus"]
+    end
+
+    U -->|"CSV upload"| WEB
+    WEB -->|"multipart"| API
+    API -->|"1. upload"| BLOB
+    API -->|"2. enqueue"| QUEUE
+    API -->|"3. status"| TABLE
+    QUEUE -->|"poll"| W
+    W -->|"download"| BLOB
+    W -->|"update"| TABLE
+    U -->|"status?"| WEB
+    WEB -->|"proxy"| API
+    API -->|"read"| TABLE
+    </pre>
+  </div>
+</section>
+
+<!-- ============ SLIDE 4 — FLUXO DETALHADO ============ -->
+<section class="slide" data-num="4 / 12">
+  <h2>Fluxo de Processamento</h2>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant W as 🌐 Web
+    participant B as ⚙️ Backend
+    participant Blob as 📦 Blob
+    participant Q as 📬 Queue
+    participant T as 📋 Table
+    participant Wk as 🔧 Worker
+
+    U->>W: POST /uploads (CSV)
+    W->>B: POST /api/uploads
+    B->>Blob: upload CSV
+    B->>Q: enqueue job
+    B->>T: status = QUEUED
+    B-->>W: 202 {upload_id}
+    W-->>U: redirect → /uploads/{id}
+
+    Wk->>Q: receiveMessages
+    Wk->>T: status = PROCESSING
+    Wk->>Blob: download CSV
+    Wk->>Wk: processar linhas
+    Wk->>T: status = COMPLETED
+    Wk->>Q: deleteMessage
+    </pre>
+  </div>
+</section>
+
+<!-- ============ SLIDE 5 — WORKLOAD IDENTITY ============ -->
+<section class="slide" data-num="5 / 12">
+  <h2>Cadeia de Identidade — Workload Identity</h2>
+  <p style="margin-bottom:1rem;color:var(--muted)">Zero secrets. Zero connection strings no código. Autenticação via OIDC + Azure AD.</p>
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart TB
+    subgraph Terraform["🏗️ Terraform"]
+        direction LR
+        MI["🔑 Managed Identity\nid-workload-poc-uploadq"] -->|"federation"| FIC["🔗 Federated\nCredential"]
+    end
+
+    subgraph K8s["☸ Kubernetes"]
+        direction LR
+        SA["📋 ServiceAccount\nupload-workload"] -->|"projected token"| POD["📦 Pod\nlabel: workload.identity/use"]
+    end
+
+    subgraph Azure["☁️ Azure AD"]
+        direction LR
+        OIDC["🪪 OIDC Issuer"] -->|"issues"| TOKEN["🎫 Access Token"]
+    end
+
+    FIC -->|"subject: sa:upload:upload-workload"| SA
+    POD -->|"OIDC exchange"| OIDC
+    TOKEN -->|"Bearer auth"| STORAGE["📦📬📋 Storage"]
+    </pre>
+  </div>
+  <ol class="steps">
+    <li>Terraform cria a <strong>Managed Identity</strong> e a <strong>Federated Credential</strong> vinculada ao ServiceAccount do K8s</li>
+    <li>O <strong>mutating webhook</strong> do Workload Identity injeta variáveis e o token OIDC no Pod</li>
+    <li><code>DefaultAzureCredential</code> no Java detecta automaticamente o token e faz a <strong>troca OIDC → Access Token</strong></li>
+    <li>O Access Token é usado nas chamadas ao Azure Storage com as <strong>roles RBAC</strong> atribuídas</li>
+  </ol>
+</section>
+
+<!-- ============ SLIDE 6 — RBAC ============ -->
+<section class="slide" data-num="6 / 12">
+  <h2>Identidades e Permissões (RBAC)</h2>
+  <h3>Managed Identities</h3>
+  <table>
+    <thead><tr><th>Identidade</th><th>Tipo</th><th>Finalidade</th></tr></thead>
+    <tbody>
+      <tr><td>AKS System Assigned</td><td>System Assigned</td><td>Gerência do cluster (nós, rede, discos)</td></tr>
+      <tr><td>AKS Kubelet Identity</td><td>System Assigned</td><td>Pull de imagens Docker do ACR</td></tr>
+      <tr><td><code>id-workload-poc-uploadq</code></td><td>User Assigned</td><td>Acesso dos pods ao Azure Storage</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Role Assignments</h3>
+  <table>
+    <thead><tr><th>Role</th><th>Scope</th><th>Principal</th><th>Operações</th></tr></thead>
+    <tbody>
+      <tr><td><code>AcrPull</code></td><td>Container Registry</td><td>Kubelet Identity</td><td>docker pull</td></tr>
+      <tr>
+        <td><code>Storage Blob Data Contributor</code></td><td>Storage Account</td>
+        <td><code>id-workload-*</code></td><td>upload, download, list, delete blobs</td>
+      </tr>
+      <tr>
+        <td><code>Storage Queue Data Contributor</code></td><td>Storage Account</td>
+        <td><code>id-workload-*</code></td><td>send, receive, peek, delete messages</td>
+      </tr>
+      <tr>
+        <td><code>Storage Table Data Contributor</code></td><td>Storage Account</td>
+        <td><code>id-workload-*</code></td><td>upsert, get, delete entities</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Federated Identity Credential</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Issuer</td><td>AKS OIDC Issuer URL</td></tr>
+      <tr><td>Subject</td><td><code>system:serviceaccount:upload:upload-workload</code></td></tr>
+      <tr><td>Audience</td><td><code>api://AzureADTokenExchange</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ SLIDE 7 — BLOB STORAGE CODE ============ -->
+<section class="slide" data-num="7 / 12">
+  <h2>Java/Quarkus — Acesso ao Blob Storage</h2>
+  <div class="cols">
+    <div>
+      <h3>Construção do Client</h3>
+<pre><code><span class="ann">@ApplicationScoped</span>
+<span class="kw">public class</span> <span class="typ">BlobStorageService</span> {
+
+  <span class="kw">private final</span> <span class="typ">BlobContainerClient</span> containerClient;
+
+  <span class="kw">public</span> <span class="fn">BlobStorageService</span>(
+      <span class="ann">@ConfigProperty</span>(name=<span class="str">"upload.storage.blob-service-url"</span>)
+      <span class="typ">String</span> blobServiceUrl,
+      <span class="ann">@ConfigProperty</span>(name=<span class="str">"upload.storage.uploads-container-name"</span>)
+      <span class="typ">String</span> containerName) {
+
+    <span class="kw">this</span>.containerClient = <span class="kw">new</span> <span class="typ">BlobServiceClientBuilder</span>()
+<span class="highlight-line">        .endpoint(blobServiceUrl)</span>
+<span class="highlight-line">        .credential(<span class="kw">new</span> <span class="typ">DefaultAzureCredentialBuilder</span>().build())</span>
+        .buildClient()
+        .getBlobContainerClient(containerName);
+  }
+}</code></pre>
+    </div>
+    <div>
+      <h3>Upload de CSV</h3>
+<pre><code><span class="kw">public void</span> <span class="fn">upload</span>(<span class="typ">String</span> blobPath,
+                   <span class="typ">InputStream</span> data,
+                   <span class="kw">long</span> length,
+                   <span class="typ">String</span> contentType) {
+
+  containerClient
+    .getBlobClient(blobPath)
+    .upload(data, length, <span class="kw">false</span>);
+
+  containerClient
+    .getBlobClient(blobPath)
+    .setHttpHeaders(
+      <span class="kw">new</span> <span class="typ">BlobHttpHeaders</span>()
+        .setContentType(contentType));
+}</code></pre>
+
+      <h3>Download (Worker)</h3>
+<pre><code><span class="kw">var</span> out = <span class="kw">new</span> <span class="typ">ByteArrayOutputStream</span>();
+containerClient
+  .getBlobClient(blobPath)
+  .downloadStream(out);
+<span class="cmt">// out → BufferedReader → Iterator&lt;String[]&gt;</span></code></pre>
+    </div>
+  </div>
+  <p style="margin-top:1rem;color:var(--muted)"><strong>Role necessária:</strong> <code>Storage Blob Data Contributor</code> — permite upload, download, list e delete.</p>
+</section>
+
+<!-- ============ SLIDE 8 — QUEUE STORAGE CODE ============ -->
+<section class="slide" data-num="8 / 12">
+  <h2>Java/Quarkus — Acesso ao Queue Storage</h2>
+  <div class="cols">
+    <div>
+      <h3>Enviar Mensagem (Backend)</h3>
+<pre><code><span class="kw">this</span>.queueClient = <span class="kw">new</span> <span class="typ">QueueClientBuilder</span>()
+<span class="highlight-line">    .endpoint(queueServiceUrl)</span>
+<span class="highlight-line">    .queueName(queueName)</span>
+<span class="highlight-line">    .credential(<span class="kw">new</span> <span class="typ">DefaultAzureCredentialBuilder</span>().build())</span>
+    .buildClient();
+
+<span class="cmt">// Enviar</span>
+<span class="typ">String</span> json = objectMapper.writeValueAsString(msg);
+<span class="typ">String</span> b64 = <span class="typ">Base64</span>.getEncoder()
+    .encodeToString(json.getBytes());
+<span class="highlight-line">queueClient.sendMessage(b64);</span></code></pre>
+    </div>
+    <div>
+      <h3>Receber e Deletar (Worker)</h3>
+<pre><code><span class="cmt">// Receber</span>
+workQueue.receiveMessages(
+    batchSize,
+<span class="highlight-line">    <span class="typ">Duration</span>.ofSeconds(3600), <span class="cmt">// visibility</span></span>
+    <span class="kw">null</span>, <span class="kw">null</span>)
+  .stream()
+  .map(msg -> {
+    <span class="typ">String</span> decoded = <span class="kw">new</span> <span class="typ">String</span>(
+      <span class="typ">Base64</span>.getDecoder()
+        .decode(msg.getBody().toString()));
+    <span class="kw">return</span> objectMapper.readValue(
+      decoded, <span class="typ">UploadJobMessage</span>.<span class="kw">class</span>);
+  });
+
+<span class="cmt">// Deletar após processamento</span>
+<span class="highlight-line">workQueue.deleteMessage(</span>
+<span class="highlight-line">    msg.getMessageId(),</span>
+<span class="highlight-line">    msg.getPopReceipt());</span></code></pre>
+    </div>
+  </div>
+  <p style="margin-top:1rem;color:var(--muted)"><strong>Role necessária:</strong> <code>Storage Queue Data Contributor</code> — permite send, receive, peek e delete. Mensagens são codificadas em <strong>Base64</strong> (requisito do Azure Queue).</p>
+</section>
+
+<!-- ============ SLIDE 9 — KEDA ============ -->
+<section class="slide" data-num="9 / 12">
+  <h2>Autoscaling com KEDA</h2>
+  <div class="cols">
+    <div>
+      <div class="mermaid-wrap">
+        <pre class="mermaid">
+flowchart TB
+    Q["📬 Queue\nwork-items"] -->|"queueLength = 1"| KEDA["⚡ KEDA\nScaledObject"]
+    KEDA -->|"HPA"| DEP["☸ Deployment\nworker"]
+    DEP -->|"0 → 10 pods"| PODS["🔧🔧🔧\n...N pods"]
+        </pre>
+      </div>
+      <h3>Configuração</h3>
+<pre><code><span class="kw">apiVersion:</span> keda.sh/v1alpha1
+<span class="kw">kind:</span> ScaledObject
+<span class="kw">spec:</span>
+  scaleTargetRef:
+    name: worker
+  pollingInterval: <span class="str">15</span>
+  cooldownPeriod: <span class="str">300</span>
+  minReplicaCount: <span class="str">0</span>
+  maxReplicaCount: <span class="str">10</span>
+  triggers:
+    - type: <span class="str">azure-queue</span>
+      metadata:
+        queueName: <span class="str">work-items</span>
+        queueLength: <span class="str">"1"</span></code></pre>
+    </div>
+    <div>
+      <h3>Comportamento Observado</h3>
+      <ol class="steps">
+        <li><strong>Fila vazia</strong>: 0 workers (scale to zero)</li>
+        <li><strong>10 mensagens</strong>: KEDA escala para 10 workers</li>
+        <li><strong>Cluster Autoscaler</strong> adiciona nós se não houver CPU/RAM</li>
+        <li><strong>Cooldown 5min</strong>: após fila vazia, workers são removidos</li>
+      </ol>
+      <h3>Resultado do Teste</h3>
+      <table>
+        <tr><td>Escala inicial</td><td>0 → 10 pods em ~2min</td></tr>
+        <tr><td>Nós AKS</td><td>2 → 4 (autoscaler)</td></tr>
+        <tr><td>Workers ativos</td><td>10 / 10</td></tr>
+        <tr><td>Throughput</td><td>~77 registros/s</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 10 — INFRA ============ -->
+<section class="slide" data-num="10 / 12">
+  <h2>Infraestrutura (Terraform)</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="icon">☸</div>
+      <h3>AKS</h3>
+      <p>Kubernetes 1.34 com KEDA habilitado, Workload Identity, OIDC Issuer, CNI Azure. Autoscaler 2–5 nós Standard_B2s.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📦</div>
+      <h3>Storage Account</h3>
+      <p>Standard LRS, TLS 1.2, OAuth default. Blob container, 2 queues (work + poison), 1 table.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🐳</div>
+      <h3>Container Registry</h3>
+      <p>ACR Basic com AcrPull atribuído ao Kubelet Identity. Multi-stage Dockerfiles (Maven + JRE Alpine).</p>
+    </div>
+    <div class="card">
+      <div class="icon">🌐</div>
+      <h3>VNet</h3>
+      <p>10.50.0.0/16 com subnets para AKS (/22) e Private Endpoints (/27). Network Plugin: Azure CNI.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🔑</div>
+      <h3>Identidade</h3>
+      <p>User Assigned MI + Federated Credential. 3 roles: Blob + Queue + Table Data Contributor.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📊</div>
+      <h3>Monitoramento</h3>
+      <p>Log Analytics Workspace com OMS Agent habilitado no AKS. Retenção: 30 dias.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 11 — RESULTADOS ============ -->
+<section class="slide" data-num="11 / 12">
+  <h2>Resultados do Teste de Carga</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <thead><tr><th>#</th><th>Arquivo</th><th>Linhas</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td>sample_01.csv</td><td>5.633</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>02</td><td>sample_02.csv</td><td>7.381</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>03</td><td>sample_03.csv</td><td>8.238</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>04</td><td>sample_04.csv</td><td>5.511</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>05</td><td>sample_05.csv</td><td>7.150</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>06</td><td>sample_06.csv</td><td>7.824</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>07</td><td>sample_07.csv</td><td>5.552</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>08</td><td>sample_08.csv</td><td>7.652</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>09</td><td>sample_09.csv</td><td>9.017</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr><td>10</td><td>sample_10.csv</td><td>5.481</td><td style="color:var(--green)">✅ completed</td></tr>
+          <tr style="font-weight:700"><td></td><td>Total</td><td>69.439</td><td style="color:var(--green)">10/10</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Cronologia</h3>
+      <ol class="steps">
+        <li><strong>0s</strong> — 10 CSVs enviados (12s de upload)</li>
+        <li><strong>~2min</strong> — KEDA escala para 10 workers</li>
+        <li><strong>~9min</strong> — Primeiro arquivo concluído</li>
+        <li><strong>~10min</strong> — 4 arquivos concluídos</li>
+        <li><strong>~12min</strong> — 6 arquivos concluídos</li>
+        <li><strong>~15min</strong> — Todos 10 concluídos</li>
+      </ol>
+      <h3>Métricas</h3>
+      <table>
+        <tr><td>Upload (10 arquivos)</td><td><strong>12s</strong></td></tr>
+        <tr><td>Processamento total</td><td><strong>902s (~15min)</strong></td></tr>
+        <tr><td>Taxa agregada</td><td><strong>~77 reg/s</strong></td></tr>
+        <tr><td>Workers ativos</td><td><strong>10</strong></td></tr>
+        <tr><td>Nós AKS (autoscaler)</td><td><strong>4</strong></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 12 — CONCLUSÃO ============ -->
+<section class="slide slide-title" data-num="12 / 12">
+  <div style="text-align:center">
+    <h1 style="font-size:2.5rem">Conclusão</h1>
+    <div class="cards" style="max-width:900px;margin:2rem auto">
+      <div class="card">
+        <div class="icon">🔐</div>
+        <h3>Zero Secrets</h3>
+        <p>Workload Identity elimina connection strings e secrets no código e no cluster</p>
+      </div>
+      <div class="card">
+        <div class="icon">📈</div>
+        <h3>Escala Automática</h3>
+        <p>KEDA + Cluster Autoscaler: 0 → 10 workers em 2min, nós adicionados sob demanda</p>
+      </div>
+      <div class="card">
+        <div class="icon">🏗️</div>
+        <h3>IaC Completo</h3>
+        <p>Terraform provê toda a infra: AKS, Storage, VNet, RBAC, Identidades</p>
+      </div>
+      <div class="card">
+        <div class="icon">☕</div>
+        <h3>Java Moderno</h3>
+        <p>Quarkus 3.17 + Java 21 + Azure SDK. CDI, REST, Qute templates, health checks</p>
+      </div>
+    </div>
+    <p style="color:var(--muted);margin-top:2rem;font-size:1.1rem">
+      69.449 registros &bull; 10 workers &bull; 15 minutos &bull; 0 falhas &bull; 0 secrets
+    </p>
+  </div>
+</section>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: {
+      background: '#020617',
+      fontSize: '24px',
+      lineColor: '#94a3b8',
+      textColor: '#e2e8f0',
+      mainBkg: '#1e293b',
+      nodeBorder: '#38bdf8',
+      clusterBkg: '#0f172a',
+      clusterBorder: '#64748b',
+      edgeLabelBackground: '#111827',
+      primaryColor: '#1e293b',
+      primaryTextColor: '#f8fafc',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#334155',
+      tertiaryColor: '#0f172a',
+      actorBkg: '#1e293b',
+      actorBorder: '#38bdf8',
+      actorTextColor: '#f8fafc',
+      actorLineColor: '#94a3b8',
+      signalColor: '#e2e8f0',
+      signalTextColor: '#e2e8f0',
+      labelBoxBkgColor: '#111827',
+      labelTextColor: '#f8fafc',
+      noteBkgColor: '#334155',
+      noteBorderColor: '#38bdf8',
+      noteTextColor: '#f8fafc',
+      activationBkgColor: '#1e293b',
+      activationBorderColor: '#38bdf8',
+      sequenceNumberColor: '#0f172a'
+    },
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: 'basis'
+    },
+    sequence: {
+      useMaxWidth: true,
+      actorMargin: 70,
+      boxMargin: 20,
+      boxTextMargin: 8,
+      messageMargin: 50,
+      mirrorActors: false
+    }
+  });
+
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function goto(i) {
+    current = Math.max(0, Math.min(i, slides.length - 1));
+    slides[current].scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('progress').style.width = ((current + 1) / slides.length * 100) + '%';
+  }
+  function next() { goto(current + 1); }
+  function prev() { goto(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); goto(0); }
+    if (e.key === 'End') { e.preventDefault(); goto(slides.length - 1); }
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) current = [...slides].indexOf(e.target);
+      document.getElementById('progress').style.width = ((current + 1) / slides.length * 100) + '%';
+    });
+  }, { threshold: 0.5 });
+  slides.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

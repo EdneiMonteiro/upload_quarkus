@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Status do Upload</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; padding: 2rem; background: #f5f7fa; color: #14213d; }
+      main { max-width: 40rem; margin: 0 auto; background: #fff; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 12px 30px rgba(20,33,61,.08); }
+      .error { margin-bottom: 1rem; padding: 0.75rem 1rem; background: #fdecea; color: #8a1c1c; border-radius: 0.5rem; }
+      dl { display: grid; grid-template-columns: auto 1fr; gap: 0.75rem 1rem; }
+      dt { font-weight: 700; }
+      a { color: #0057b8; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Status do upload</h1>
+      <p>Upload: <strong>{uploadId}</strong></p>
+      {#if error}
+      <div class="error">{error}</div>
+      {#else if status}
+      <dl>
+        <dt>Estado</dt>
+        <dd>{status.state}</dd>
+        <dt>Correlation ID</dt>
+        <dd>{status.correlationId}</dd>
+        <dt>Enviado em</dt>
+        <dd>{status.submittedAt}</dd>
+        <dt>Atualizado em</dt>
+        <dd>{status.updatedAt}</dd>
+        <dt>Registros processados</dt>
+        <dd>{status.recordsProcessed ?: 0}</dd>
+        <dt>Erro</dt>
+        <dd>{status.errorMessage ?: '-'}</dd>
+      </dl>
+      {/if}
+      <p><a href="/">Enviar outro arquivo</a></p>
+    </main>
+  </body>
+</html>

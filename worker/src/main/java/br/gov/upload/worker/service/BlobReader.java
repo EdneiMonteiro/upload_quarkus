@@ -27,6 +27,7 @@ import org.jboss.logging.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -49,28 +50,27 @@ public class BlobReader {
                 .getBlobContainerClient(containerName);
     }
 
-    public Iterator<String[]> iterRows(String blobPath) {
+    public interface CloseableIterator<T> extends Iterator<T>, Closeable {}
+
+    public CloseableIterator<String[]> iterRows(String blobPath) {
         // Leitura em streaming para nao carregar arquivos grandes inteiros em memoria.
         var blobInputStream = containerClient.getBlobClient(blobPath).openInputStream();
         var reader = new BufferedReader(new InputStreamReader(blobInputStream, StandardCharsets.UTF_8));
 
-        return new Iterator<>() {
+        return new CloseableIterator<>() {
             private String nextLine = readNext();
+            private boolean closed = false;
 
             private String readNext() {
                 try {
                     String line = reader.readLine();
                     if (line == null) {
-                        reader.close();
+                        close();
                     }
                     return line;
                 } catch (IOException e) {
                     LOG.errorf(e, "falha ao ler blob CSV");
-                    try {
-                        reader.close();
-                    } catch (IOException ignore) {
-                        // sem acao adicional
-                    }
+                    close();
                     return null;
                 }
             }
@@ -86,6 +86,18 @@ public class BlobReader {
                 String[] fields = parseCsvLine(nextLine);
                 nextLine = readNext();
                 return fields;
+            }
+
+            @Override
+            public void close() {
+                if (!closed) {
+                    closed = true;
+                    try {
+                        reader.close();
+                    } catch (IOException ignore) {
+                        // sem acao adicional
+                    }
+                }
             }
         };
     }

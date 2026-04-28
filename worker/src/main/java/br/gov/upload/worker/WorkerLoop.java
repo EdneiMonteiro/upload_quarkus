@@ -33,6 +33,7 @@ import jakarta.annotation.PreDestroy;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +58,9 @@ public class WorkerLoop {
 
     @ConfigProperty(name = "upload.worker.error-backoff-ms", defaultValue = "5000")
     int errorBackoffMs;
+
+    @ConfigProperty(name = "upload.worker.max-dequeue-count", defaultValue = "5")
+    int maxDequeueCount;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -121,15 +125,24 @@ public class WorkerLoop {
                 processedCount++;
 
             } catch (Exception e) {
-                statusRepo.markFailed(status, e.getMessage());
-                try {
-                    queueService.sendToPoison(message);
-                    queueService.delete(received.raw());
-                } catch (Exception pe) {
-                    LOG.errorf(pe, "failed to move message to poison queue: uploadId=%s", message.getUploadId());
-                    continue;
+                LOG.errorf(e, "message processing failed: uploadId=%s dequeueCount=%d",
+                        message.getUploadId(), received.raw().getDequeueCount());
+
+                if (received.raw().getDequeueCount() >= maxDequeueCount) {
+                    statusRepo.markFailed(status, e.getMessage());
+                    try {
+                        queueService.sendToPoison(message);
+                        queueService.delete(received.raw());
+                    } catch (Exception pe) {
+                        LOG.errorf(pe, "failed to move message to poison queue: uploadId=%s", message.getUploadId());
+                        continue;
+                    }
+                    LOG.warnf("message moved to poison queue after %d attempts: uploadId=%s",
+                            received.raw().getDequeueCount(), message.getUploadId());
+                } else {
+                    LOG.infof("message will be retried (attempt %d/%d): uploadId=%s",
+                            received.raw().getDequeueCount(), maxDequeueCount, message.getUploadId());
                 }
-                LOG.errorf(e, "message processing failed: uploadId=%s", message.getUploadId());
             }
         }
 
@@ -137,18 +150,21 @@ public class WorkerLoop {
     }
 
     private int processRows(UploadJobMessage message) throws InterruptedException {
-        var rows = blobReader.iterRows(message.getBlobPath());
-        int count = 0;
+        try (var rows = blobReader.iterRows(message.getBlobPath())) {
+            int count = 0;
 
-        while (rows.hasNext()) {
-            rows.next();
-            if (perRecordDelayMs > 0) {
-                Thread.sleep(perRecordDelayMs);
+            while (rows.hasNext()) {
+                rows.next();
+                if (perRecordDelayMs > 0) {
+                    Thread.sleep(perRecordDelayMs);
+                }
+                count++;
             }
-            count++;
-        }
 
-        return count;
+            return count;
+        } catch (IOException e) {
+            throw new RuntimeException("falha ao fechar stream do blob", e);
+        }
     }
 
     private void sleepSafely(long millis) throws InterruptedException {

@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class QueueService {
@@ -69,12 +70,14 @@ public class QueueService {
                     try {
                         String decoded = new String(Base64.getDecoder().decode(msg.getBody().toString()), StandardCharsets.UTF_8);
                         var parsed = objectMapper.readValue(decoded, UploadJobMessage.class);
-                        return new ReceivedMessage(msg, parsed);
+                        return Optional.of(new ReceivedMessage(msg, parsed));
                     } catch (Exception e) {
-                        LOG.errorf(e, "falha ao desserializar mensagem da fila: messageId=%s", msg.getMessageId());
-                        throw new RuntimeException("Failed to parse queue message", e);
+                        LOG.errorf(e, "falha ao desserializar mensagem da fila, descartando: messageId=%s", msg.getMessageId());
+                        workQueue.deleteMessage(msg.getMessageId(), msg.getPopReceipt());
+                        return Optional.<ReceivedMessage>empty();
                     }
                 })
+                .flatMap(Optional::stream)
                 .toList();
     }
 

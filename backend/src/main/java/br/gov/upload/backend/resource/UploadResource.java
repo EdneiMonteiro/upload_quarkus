@@ -82,11 +82,13 @@ public class UploadResource {
             @RestHeader("X-Submitted-By") String submittedBy) {
 
         if (file == null || file.fileName() == null || file.fileName().isBlank()) {
+            LOG.warnf("upload rejected: file=%s fileName=%s", file, file != null ? file.fileName() : "null");
             return badRequest(FILE_REQUIRED_MESSAGE);
         }
 
         String safeFileName = sanitizeFileName(file.fileName());
         if (!safeFileName.toLowerCase(Locale.ROOT).endsWith(".csv")) {
+            LOG.warnf("upload rejected: not CSV, fileName=%s", safeFileName);
             return badRequest(CSV_ONLY_MESSAGE);
         }
 

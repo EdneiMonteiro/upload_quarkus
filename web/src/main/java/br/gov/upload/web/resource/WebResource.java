@@ -41,8 +41,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.resteasy.reactive.RestForm;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Locale;
@@ -92,24 +91,26 @@ public class WebResource {
                 : defaultSubmittedBy;
 
             UploadResponse uploadResponse;
-            try (InputStream fileStream = Files.newInputStream(file.uploadedFile())) {
-            uploadResponse = backendClient.createUpload(fileStream, safeFileName, correlationId, submittedBy);
+            // Symlink com nome original para que o REST client envie o filename correto no multipart.
+            File namedFile = Files.createSymbolicLink(
+                    file.uploadedFile().getParent().resolve(safeFileName),
+                    file.uploadedFile()).toFile();
+            try {
+                uploadResponse = backendClient.createUpload(namedFile, correlationId, submittedBy);
+            } finally {
+                namedFile.delete();
             }
 
             return Response.seeOther(URI.create("/uploads/" + uploadResponse.getUploadId())).build();
 
         } catch (WebApplicationException e) {
             int statusCode = e.getResponse() != null ? e.getResponse().getStatus() : 502;
+            LOG.errorf("backend returned HTTP %d for upload", statusCode);
             String message = statusCode >= 500
                 ? "Falha temporaria ao enviar para o backend."
                 : "Nao foi possivel enviar o arquivo informado.";
             return Response.status(statusCode)
                 .entity(index.data("error", message).render())
-                .build();
-        } catch (IOException e) {
-            LOG.error("failed to read uploaded file", e);
-            return Response.status(500)
-                .entity(index.data("error", "Falha ao ler o arquivo enviado.").render())
                 .build();
         } catch (Exception e) {
             LOG.error("backend upload request failed", e);

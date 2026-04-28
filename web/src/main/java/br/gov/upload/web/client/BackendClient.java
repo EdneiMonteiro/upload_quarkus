@@ -24,10 +24,11 @@ import br.gov.upload.shared.model.UploadResponse;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestHeader;
 
-import java.io.InputStream;
+import java.io.File;
 
 @RegisterRestClient(configKey = "backend-api")
 @Path("/api/uploads")
@@ -37,8 +38,7 @@ public interface BackendClient {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     UploadResponse createUpload(
-            @RestForm("file") InputStream file,
-            @RestForm("fileName") String fileName,
+            @RestForm("file") @PartType(MediaType.APPLICATION_OCTET_STREAM) File file,
             @RestHeader("X-Correlation-ID") String correlationId,
             @RestHeader("X-Submitted-By") String submittedBy);
 

@@ -128,9 +128,14 @@ public class UploadResource {
     @Path("/{uploadId}/status")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getStatus(@PathParam("uploadId") String uploadId) {
-        return statusRepo.get(uploadId)
-                .map(s -> Response.ok(s).build())
-                .orElse(Response.status(404).entity(new ErrorResponse("upload not found")).build());
+        try {
+            return statusRepo.get(uploadId)
+                    .map(s -> Response.ok(s).build())
+                    .orElse(Response.status(404).entity(new ErrorResponse("upload not found")).build());
+        } catch (Exception e) {
+            LOG.errorf(e, "falha ao consultar status: uploadId=%s", uploadId);
+            return Response.status(502).entity(new ErrorResponse("failed to retrieve upload status")).build();
+        }
     }
 
     private Response badRequest(String message) {

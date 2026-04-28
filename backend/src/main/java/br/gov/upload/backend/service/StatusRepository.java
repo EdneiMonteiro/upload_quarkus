@@ -87,10 +87,7 @@ public class StatusRepository {
                 return Optional.empty();
             }
             LOG.errorf(e, "falha ao consultar status no Azure Table: uploadId=%s", uploadId);
-            return Optional.empty();
-        } catch (RuntimeException e) {
-            LOG.errorf(e, "falha inesperada ao montar status: uploadId=%s", uploadId);
-            return Optional.empty();
+            throw e;
         }
     }
 }

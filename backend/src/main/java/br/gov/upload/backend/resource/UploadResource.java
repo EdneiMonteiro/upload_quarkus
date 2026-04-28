@@ -21,7 +21,7 @@ package br.gov.upload.backend.resource;
 
 import br.gov.upload.backend.service.BlobStorageService;
 import br.gov.upload.backend.service.QueueStorageService;
-import br.gov.upload.backend.service.StatusRepository;
+import br.gov.upload.shared.service.StatusRepository;
 import br.gov.upload.shared.model.ProcessingState;
 import br.gov.upload.shared.model.ProcessingStatus;
 import br.gov.upload.shared.model.UploadJobMessage;

@@ -17,17 +17,20 @@
  * Please note: None of the conditions outlined in the disclaimer above will supersede the terms and conditions
  * contained within the Customers Support Services Description.
  */
-package br.gov.upload.worker.service;
+package br.gov.upload.shared.service;
 
 import br.gov.upload.shared.model.ProcessingState;
 import br.gov.upload.shared.model.ProcessingStatus;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
 import com.azure.data.tables.models.TableEntity;
+import com.azure.data.tables.models.TableServiceException;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import java.util.Optional;
 
 @ApplicationScoped
 public class StatusRepository {
@@ -62,6 +65,31 @@ public class StatusRepository {
         }
         tableClient.upsertEntity(entity);
         LOG.debugf("status atualizado: uploadId=%s state=%s", status.getUploadId(), status.getState());
+    }
+
+    public Optional<ProcessingStatus> get(String uploadId) {
+        try {
+            TableEntity entity = tableClient.getEntity(PARTITION_KEY, uploadId);
+            var status = new ProcessingStatus();
+            status.setUploadId((String) entity.getProperty("upload_id"));
+            status.setCorrelationId((String) entity.getProperty("correlation_id"));
+            status.setState((String) entity.getProperty("state"));
+            status.setSubmittedAt((String) entity.getProperty("submitted_at"));
+            status.setUpdatedAt((String) entity.getProperty("updated_at"));
+            status.setSubmittedBy((String) entity.getProperty("submitted_by"));
+            Object rp = entity.getProperty("records_processed");
+            if (rp instanceof Number n) {
+                status.setRecordsProcessed(n.intValue());
+            }
+            status.setErrorMessage((String) entity.getProperty("error_message"));
+            return Optional.of(status);
+        } catch (TableServiceException e) {
+            if (e.getResponse() != null && e.getResponse().getStatusCode() == 404) {
+                return Optional.empty();
+            }
+            LOG.errorf(e, "falha ao consultar status no Azure Table: uploadId=%s", uploadId);
+            throw e;
+        }
     }
 
     public ProcessingStatus markProcessing(ProcessingStatus status) {

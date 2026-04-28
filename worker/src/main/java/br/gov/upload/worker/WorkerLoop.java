@@ -24,7 +24,7 @@ import br.gov.upload.shared.model.ProcessingStatus;
 import br.gov.upload.shared.model.UploadJobMessage;
 import br.gov.upload.worker.service.BlobReader;
 import br.gov.upload.worker.service.QueueService;
-import br.gov.upload.worker.service.StatusRepository;
+import br.gov.upload.shared.service.StatusRepository;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
